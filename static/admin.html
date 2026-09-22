@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>凡熙宠物管理后台</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600&display=swap');
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background: #1a1a2e;
+    color: #ffffff;
+    overflow: hidden;
+}
+
+/* ============ 通用 ============ */
+button { font-family: inherit; }
+.hidden { display: none !important; }
+
+/* ============ 登录页（沿用原模板样式） ============ */
+.login-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    position: relative;
+}
+.login-box {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    padding: 40px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 15px 25px rgba(0,0,0,0.6);
+    width: 400px;
+    max-width: 90%;
+    position: relative;
+    z-index: 2;
+}
+.login-box h2 { margin-bottom: 30px; text-align: center; font-size: 2em; }
+.login-error {
+    color: #ff6b6b; font-size: 13px; text-align: center;
+    min-height: 18px; margin-bottom: 10px;
+}
+.input-box { 
+    position: relative; 
+    margin-bottom: 30px; 
+    /* 下边距 */
+    padding-top: 15px;
+
+}
+
+
+.input-box input {
+    width: 100%; padding: 10px 0; font-size: 16px; color: #fff;
+    border: none; border-bottom: 1px solid #fff; outline: none;
+    background: transparent; transition: 0.5s;
+}
+.input-box label {
+    position: absolute; top: 0; left: 0; padding: 10px 0;
+    font-size: 16px; color: #fff; pointer-events: none; transition: 0.5s;
+}
+.input-box input:focus ~ label,
+.input-box input:valid ~ label {
+    top: -20px; left: 0; color: #03e9f4; font-size: 12px;
+}
+.btn {
+    position: relative; display: inline-block; padding: 10px 20px;
+    color: #03e9f4; font-size: 16px; text-decoration: none;
+    text-transform: uppercase; overflow: hidden; transition: 0.5s;
+    margin-top: 20px; letter-spacing: 4px; background: transparent;
+    border: none; cursor: pointer;
+}
+.btn:hover {
+    background: #03e9f4; color: #fff; border-radius: 5px;
+    box-shadow: 0 0 5px #03e9f4, 0 0 25px #03e9f4, 0 0 50px #03e9f4, 0 0 100px #03e9f4;
+}
+.btn span { position: absolute; display: block; }
+.btn span:nth-child(1) { top:0; left:-100%; width:100%; height:2px; background:linear-gradient(90deg,transparent,#03e9f4); animation:btn-anim1 1s linear infinite; }
+@keyframes btn-anim1 { 0%{left:-100%} 50%,100%{left:100%} }
+.btn span:nth-child(2) { top:-100%; right:0; width:2px; height:100%; background:linear-gradient(180deg,transparent,#03e9f4); animation:btn-anim2 1s linear infinite; animation-delay:.25s; }
+@keyframes btn-anim2 { 0%{top:-100%} 50%,100%{top:100%} }
+.btn span:nth-child(3) { bottom:0; right:-100%; width:100%; height:2px; background:linear-gradient(270deg,transparent,#03e9f4); animation:btn-anim3 1s linear infinite; animation-delay:.5s; }
+@keyframes btn-anim3 { 0%{right:-100%} 50%,100%{right:100%} }
+.btn span:nth-child(4) { bottom:-100%; left:0; width:2px; height:100%; background:linear-gradient(360deg,transparent,#03e9f4); animation:btn-anim4 1s linear infinite; animation-delay:.75s; }
+@keyframes btn-anim4 { 0%{bottom:-100%} 50%,100%{bottom:100%} }
+
+.particles { position: absolute; inset: 0; overflow: hidden; }
+.particle {
+    position: absolute; display: block; pointer-events: none;
+    background-color: #03e9f4; box-shadow: 0 0 10px #03e9f4; border-radius: 50%;
+    animation: particles linear infinite;
+}
+@keyframes particles {
+    0% { transform: translateY(0) rotate(0deg); opacity: 1; border-radius: 0; }
+    100% { transform: translateY(-1000px) rotate(720deg); opacity: 0; border-radius: 50%; }
+}
+
+/* ============ 后台主框架 ============ */
+.layout { display: flex; height: 100vh; }
+.sidebar {
+    width: 220px; background: #16162a; flex-shrink: 0;
+    display: flex; flex-direction: column;
+    border-right: 1px solid rgba(3,233,244,0.15);
+}
+.sidebar .logo {
+    padding: 24px 20px; font-size: 20px; font-weight: 600;
+    color: #03e9f4; letter-spacing: 2px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.nav-item {
+    padding: 15px 22px; cursor: pointer; color: #b8b8d1;
+    border-left: 3px solid transparent; transition: .25s; font-size: 15px;
+}
+.nav-item:hover { background: rgba(3,233,244,0.08); color: #fff; }
+.nav-item.active {
+    background: rgba(3,233,244,0.12); color: #03e9f4;
+    border-left-color: #03e9f4;
+}
+.main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
+.topbar {
+    height: 60px; background: #16162a; display: flex; align-items: center;
+    justify-content: space-between; padding: 0 24px; flex-shrink: 0;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+}
+.topbar .page-title { font-size: 17px; font-weight: 500; }
+.topbar .user-box { display: flex; align-items: center; gap: 14px; font-size: 14px; }
+.content { flex: 1; overflow-y: auto; padding: 24px; }
+
+/* ============ 按钮/表单/表格 ============ */
+.btn-sm {
+    padding: 6px 12px; font-size: 12px; border-radius: 4px; cursor: pointer;
+    border: 1px solid #03e9f4; background: transparent; color: #03e9f4;
+    transition: .25s; letter-spacing: 1px;
+}
+.btn-sm:hover { background: #03e9f4; color: #16162a; }
+.btn-sm.danger { border-color: #ff6b6b; color: #ff6b6b; }
+.btn-sm.danger:hover { background: #ff6b6b; color: #fff; }
+.btn-sm.gray { border-color: #555; color: #aaa; }
+.btn-sm.gray:hover { background: #555; color: #fff; }
+.btn-primary {
+    padding: 9px 18px; font-size: 14px; border-radius: 5px; cursor: pointer;
+    background: #03e9f4; color: #16162a; border: none; font-weight: 500; transition: .25s;
+}
+.btn-primary:hover { box-shadow: 0 0 12px rgba(3,233,244,.6); }
+.btn-primary:disabled { opacity: .5; cursor: not-allowed; box-shadow: none; }
+
+.toolbar { display: flex; gap: 10px; align-items: center; margin-bottom: 18px; flex-wrap: wrap; }
+.toolbar input[type=text], .toolbar select {
+    background: #16162a; border: 1px solid rgba(255,255,255,0.15);
+    color: #fff; padding: 8px 12px; border-radius: 5px; font-size: 14px; outline: none;
+}
+.toolbar input[type=text]:focus, .toolbar select:focus { border-color: #03e9f4; }
+.toolbar .spacer { flex: 1; }
+
+table { width: 100%; border-collapse: collapse; background: #16162a; border-radius: 8px; overflow: hidden; }
+th, td { padding: 12px 14px; text-align: left; font-size: 14px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+th { background: #1f1f38; color: #03e9f4; font-weight: 500; white-space: nowrap; }
+tr:hover td { background: rgba(3,233,244,0.04); }
+.thumb { width: 56px; height: 56px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,.1); }
+.cover-thumb { width: 90px; height: 60px; object-fit: cover; border-radius: 6px; border: 1px solid rgba(255,255,255,.1); }
+.cover-empty {
+    width: 90px; height: 60px; border-radius: 6px; display: flex; align-items: center;
+    justify-content: center; font-size: 12px; color: #666;
+    background: rgba(255,255,255,.04); border: 1px dashed #444;
+}
+.tag {
+    display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 12px;
+    background: rgba(3,233,244,.12); color: #03e9f4;
+}
+.pagination { display: flex; gap: 8px; justify-content: center; align-items: center; margin-top: 18px; }
+.pagination button {
+    background: #1f1f38; border: 1px solid rgba(255,255,255,.12); color: #ccc;
+    border-radius: 4px; padding: 6px 12px; cursor: pointer; font-size: 13px;
+}
+.pagination button:disabled { opacity: .4; cursor: default; }
+
+/* 分类卡片 */
+.card-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+.cat-card {
+    background: #16162a; border-radius: 10px; overflow: hidden;
+    border: 1px solid rgba(255,255,255,.06); transition: .25s;
+}
+.cat-card:hover { border-color: rgba(3,233,244,.4); transform: translateY(-3px); }
+.cat-card .cover { width: 100%; height: 140px; object-fit: cover; background: #1f1f38; display:block; }
+.cat-card .cover-placeholder {
+    width: 100%; height: 140px; display: flex; align-items: center; justify-content: center;
+    color: #555; font-size: 14px; background: linear-gradient(135deg,#1f1f38,#16162a);
+}
+.cat-card .info { padding: 14px 16px; }
+.cat-card .info .name { font-size: 16px; font-weight: 500; margin-bottom: 6px; }
+.cat-card .info .meta { font-size: 12px; color: #888; margin-bottom: 12px; }
+.cat-card .actions { display: flex; gap: 8px; }
+
+/* ============ 弹窗 ============ */
+.modal-mask {
+    position: fixed; inset: 0; background: rgba(0,0,0,.65); z-index: 100;
+    display: flex; align-items: center; justify-content: center; backdrop-filter: blur(3px);
+}
+.modal {
+    background: #16162a; border-radius: 12px; width: 480px; max-width: 92vw;
+    max-height: 88vh; overflow-y: auto;
+    border: 1px solid rgba(3,233,244,.25); box-shadow: 0 0 40px rgba(3,233,244,.12);
+}
+.modal.wide { width: 680px; }
+.modal-header {
+    padding: 18px 22px; font-size: 17px; font-weight: 500; color: #03e9f4;
+    border-bottom: 1px solid rgba(255,255,255,.06); display: flex; justify-content: space-between;
+}
+.modal-header .close { cursor: pointer; color: #888; font-size: 20px; line-height: 1; }
+.modal-header .close:hover { color: #fff; }
+.modal-body { padding: 22px; }
+.modal-footer { padding: 14px 22px 20px; display: flex; justify-content: flex-end; gap: 10px; }
+
+.form-item { margin-bottom: 16px; }
+.form-item label { display: block; font-size: 13px; color: #b8b8d1; margin-bottom: 7px; }
+.form-item input[type=text], .form-item input[type=password], .form-item input[type=number],
+.form-item select, .form-item textarea {
+    width: 100%; background: #1a1a2e; border: 1px solid rgba(255,255,255,.15);
+    color: #fff; padding: 9px 12px; border-radius: 5px; font-size: 14px; outline: none;
+}
+.form-item input:focus, .form-item select:focus { border-color: #03e9f4; }
+.form-item .hint { font-size: 12px; color: #777; margin-top: 5px; }
+.cover-preview { margin-top: 10px; max-width: 100%; max-height: 160px; border-radius: 6px; border: 1px solid rgba(255,255,255,.1); }
+.upload-row { display: flex; gap: 8px; align-items: center; }
+.upload-row input { flex: 1; }
+
+.file-pick-list { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.file-pick-item {
+    display: flex; align-items: center; gap: 10px; font-size: 13px;
+    background: #1a1a2e; padding: 6px 10px; border-radius: 5px;
+}
+.file-pick-item img { width: 34px; height: 34px; object-fit: cover; border-radius: 4px; }
+.file-pick-item .fname { flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.file-pick-item .ok { color: #4ade80; font-size: 12px; }
+.file-pick-item .fail { color: #ff6b6b; font-size: 12px; }
+
+.detail-grid { display: flex; gap: 22px; }
+.detail-grid .big-img {
+    width: 320px; max-width: 50%; border-radius: 8px; border: 1px solid rgba(255,255,255,.1);
+    background: #000;
+}
+.detail-grid .dl { font-size: 14px; line-height: 2.1; color: #ccc; }
+.detail-grid .dl b { color: #03e9f4; font-weight: 500; margin-right: 8px; }
+
+/* Toast */
+#toast {
+    position: fixed; top: 22px; left: 50%; transform: translateX(-50%); z-index: 300;
+    display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none;
+}
+.toast-item {
+    padding: 10px 22px; border-radius: 6px; font-size: 14px; color: #fff;
+    box-shadow: 0 6px 20px rgba(0,0,0,.4); animation: toast-in .25s;
+}
+.toast-item.success { background: rgba(74,222,128,.92); color: #0f2a18; }
+.toast-item.error { background: rgba(255,107,107,.92); }
+.toast-item.info { background: rgba(3,233,244,.92); color: #0f2a2e; }
+@keyframes toast-in { from { opacity: 0; transform: translateY(-12px); } to { opacity: 1; transform: none; } }
+
+.empty-tip { text-align: center; color: #666; padding: 50px 0; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<!-- ============ 登录页 ============ -->
+<div id="login-view" class="login-container">
+    <div class="particles" id="particles"></div>
+    <div class="login-box">
+        <h2>凡熙宠物管理后台</h2>
+        <div class="login-error" id="login-error"></div>
+        <form id="login-form">
+            <div class="input-box">
+                <input type="text" id="login-username" required>
+                <label>管理员账号</label>
+            </div>
+            <div class="input-box">
+                <input type="password" id="login-password" required>
+                <label>密码</label>
+            </div>
+            <button type="submit" class="btn" style="width:100%;text-align:center;">
+                <span></span><span></span><span></span><span></span>登录
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- ============ 后台主界面 ============ -->
+<div id="app-view" class="layout hidden">
+    <aside class="sidebar">
+        <div class="logo">IMAGE ADMIN</div>
+        <div class="nav-item active" data-page="images">🖼️ 图片管理</div>
+        <div class="nav-item" data-page="categories">📁 分类管理</div>
+        <div class="nav-item" data-page="banners">📢 轮播海报</div>
+        <div class="nav-item" data-page="notices">📰 公告管理</div>
+        <div class="nav-item" data-page="admins">👤 管理员管理</div>
+    </aside>
+    <div class="main">
+        <div class="topbar">
+            <div class="page-title" id="page-title">图片管理</div>
+            <div class="user-box">
+                <span>你好，<b id="current-username" style="color:#03e9f4"></b></span>
+                <button class="btn-sm" onclick="openPwdModal()">修改密码</button>
+                <button class="btn-sm gray" onclick="logout()">退出登录</button>
+            </div>
+        </div>
+        <div class="content" id="content"><!-- 各模块渲染区 --></div>
+    </div>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast"></div>
+
+<script>
+/* ================= 基础工具 ================= */
+const API = '';
+let token = localStorage.getItem('admin_token') || '';
+let currentUser = localStorage.getItem('admin_username') || '';
+
+function escapeHtml(s) {
+    return String(s ?? '').replace(/[&<>"']/g, c =>
+        ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function fmtSize(n) {
+    if (n == null) return '-';
+    return n >= 1048576 ? (n/1048576).toFixed(2)+' MB' : (n/1024).toFixed(1)+' KB';
+}
+function fmtTime(t) {
+    if (!t) return '-';
+    return String(t).replace('T', ' ').slice(0, 19);
+}
+
+function toast(msg, type = 'success') {
+    const box = document.getElementById('toast');
+    const el = document.createElement('div');
+    el.className = 'toast-item ' + type;
+    el.textContent = msg;
+    box.appendChild(el);
+    setTimeout(() => el.remove(), 2600);
+}
+
+async function api(path, options = {}) {
+    const opts = { method: options.method || 'GET', headers: { ...(options.headers || {}) } };
+    if (token) opts.headers['Authorization'] = 'Bearer ' + token;
+    if (options.json !== undefined) {
+        opts.headers['Content-Type'] = 'application/json';
+        opts.body = JSON.stringify(options.json);
+    }
+    if (options.formData !== undefined) opts.body = options.formData;
+
+    const res = await fetch(API + path, opts);
+    if (res.status === 401) {
+        logout(true);
+        throw new Error('登录已过期，请重新登录');
+    }
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.detail || data.message || ('请求失败(' + res.status + ')'));
+    return data;
+}
+
+/* ================= 弹窗系统 ================= */
+function showModal(html, wide = false) {
+    const root = document.getElementById('modal-root');
+    root.innerHTML = `
+        <div class="modal-mask" onclick="if(event.target===this)closeModal()">
+            <div class="modal ${wide ? 'wide' : ''}">${html}</div>
+        </div>`;
+}
+function closeModal() { document.getElementById('modal-root').innerHTML = ''; }
+
+function confirmBox(msg) {
+    return new Promise(resolve => {
+        showModal(`
+            <div class="modal-header">操作确认<span class="close" onclick="closeModal();window._confirmResolve(false)">×</span></div>
+            <div class="modal-body" style="font-size:15px;line-height:1.7">${escapeHtml(msg)}</div>
+            <div class="modal-footer">
+                <button class="btn-sm gray" onclick="closeModal();window._confirmResolve(false)">取消</button>
+                <button class="btn-sm danger" onclick="closeModal();window._confirmResolve(true)">确定删除</button>
+            </div>`);
+        window._confirmResolve = resolve;
+    });
+}
+
+/* ================= 登录/登出 ================= */
+function initParticles() {
+    const box = document.getElementById('particles');
+    let html = '';
+    for (let i = 0; i < 30; i++) {
+        const size = 2 + Math.random() * 6;
+        html += `<span class="particle" style="left:${Math.random()*100}%;width:${size}px;height:${size}px;
+            bottom:-10px;animation-duration:${8+Math.random()*14}s;animation-delay:${Math.random()*10}s;"></span>`;
+    }
+    box.innerHTML = html;
+}
+initParticles();
+
+document.getElementById('login-form').addEventListener('submit', async e => {
+    e.preventDefault();
+    const username = document.getElementById('login-username').value.trim();
+    const password = document.getElementById('login-password').value;
+    const errBox = document.getElementById('login-error');
+    errBox.textContent = '';
+    try {
+        const res = await api('/api/admin/login', { method: 'POST', json: { username, password } });
+        token = res.data.token;
+        currentUser = res.data.username;
+        localStorage.setItem('admin_token', token);
+        localStorage.setItem('admin_username', currentUser);
+        enterApp();
+    } catch (err) {
+        errBox.textContent = err.message;
+    }
+});
+
+function logout(silent) {
+    token = ''; currentUser = '';
+    localStorage.removeItem('admin_token');
+    localStorage.removeItem('admin_username');
+    document.getElementById('app-view').classList.add('hidden');
+    document.getElementById('login-view').classList.remove('hidden');
+    if (!silent) toast('已退出登录', 'info');
+}
+
+async function enterApp() {
+    try {
+        await api('/api/admin/info');
+    } catch { return; }
+    document.getElementById('current-username').textContent = currentUser;
+    document.getElementById('login-view').classList.add('hidden');
+    document.getElementById('app-view').classList.remove('hidden');
+    switchPage('images');
+}
+
+/* ================= 导航 ================= */
+document.querySelectorAll('.nav-item').forEach(el => {
+    el.addEventListener('click', () => switchPage(el.dataset.page));
+});
+const PAGE_TITLES = { images: '图片管理', categories: '分类管理', banners: '轮播海报', notices: '公告管理', admins: '管理员管理' };
+function switchPage(page) {
+    document.querySelectorAll('.nav-item').forEach(el =>
+        el.classList.toggle('active', el.dataset.page === page));
+    document.getElementById('page-title').textContent = PAGE_TITLES[page];
+    if (page === 'images') renderImages();
+    else if (page === 'categories') renderCategories();
+    else if (page === 'banners') renderBanners();
+    else if (page === 'notices') renderNotices();
+    else renderAdmins();
+}
+
+/* ================= 分类缓存（图片模块要用） ================= */
+let categoryCache = [];
+async function loadCategories() {
+    const res = await api('/api/category/list');
+    categoryCache = res.data || [];
+    return categoryCache;
+}
+function categoryOptions(selectedId) {
+    return categoryCache.map(c =>
+        `<option value="${escapeHtml(c.name)}" ${c.id===selectedId?'selected':''}>${escapeHtml(c.name)}</option>`
+    ).join('');
+}
+
+/* ================= 模块一：图片管理 ================= */
+const imgState = { keyword: '', imageId: '', categoryName: '', page: 1, pageSize: 10, total: 0 };
+
+async function renderImages() {
+    const c = document.getElementById('content');
+    c.innerHTML = `
+        <div class="toolbar">
+            <input type="text" id="img-keyword" placeholder="搜索图片名/分类名" style="width:180px"
+                value="${escapeHtml(imgState.keyword)}">
+            <input type="text" id="img-id" placeholder="图片ID精确查" style="width:120px"
+                value="${escapeHtml(imgState.imageId)}">
+            <button class="btn-primary" onclick="doImageSearch()">搜索</button>
+            <button class="btn-sm gray" onclick="resetImageSearch()">重置</button>
+            <div class="spacer"></div>
+            <select id="img-filter-cat" onchange="doFilterCategory(this.value)">
+                <option value="">全部分类</option>
+            </select>
+            <button class="btn-primary" onclick="openUploadModal(false)">＋ 上传图片</button>
+            <button class="btn-primary" onclick="openUploadModal(true)">⧉ 批量上传</button>
+        </div>
+        <table>
+            <thead><tr>
+                <th>ID</th><th>预览</th><th>标题</th><th>所属分类</th>
+                <th>大小</th><th>上传时间</th><th style="width:210px">操作</th>
+            </tr></thead>
+            <tbody id="img-tbody"><tr><td colspan="7" class="empty-tip">加载中...</td></tr></tbody>
+        </table>
+        <div class="pagination" id="img-pagination"></div>`;
+
+    await loadCategories();
+    const sel = document.getElementById('img-filter-cat');
+    sel.innerHTML = '<option value="">全部分类</option>' +
+        categoryCache.map(x => `<option value="${escapeHtml(x.name)}" ${x.name===imgState.categoryName?'selected':''}>${escapeHtml(x.name)}</option>`).join('');
+
+    await loadImagePage();
+}
+function doImageSearch() {
+    imgState.keyword = document.getElementById('img-keyword').value.trim();
+    imgState.imageId = document.getElementById('img-id').value.trim();
+    imgState.page = 1;
+    loadImagePage();
+}
+function resetImageSearch() {
+    Object.assign(imgState, { keyword:'', imageId:'', categoryName:'', page:1 });
+    renderImages();
+}
+function doFilterCategory(v) { imgState.categoryName = v; imgState.page = 1; loadImagePage(); }
+
+async function loadImagePage() {
+    const params = new URLSearchParams();
+    if (imgState.keyword) params.set('keyword', imgState.keyword);
+    if (imgState.imageId) params.set('image_id', imgState.imageId);
+    if (imgState.categoryName) params.set('category_name', imgState.categoryName);
+    params.set('page', imgState.page);
+    params.set('page_size', imgState.pageSize);
+
+    // 关键词/ID 走 search 接口，纯分类筛选走 list 接口
+    const path = (imgState.keyword || imgState.imageId)
+        ? '/api/image/search?' + params
+        : '/api/image/list?' + params;
+    const res = await api(path);
+    imgState.total = res.data.total;
+    renderImageRows(res.data.items);
+    renderPagination('img-pagination', res.data.total, imgState.page, imgState.pageSize,
+        p => { imgState.page = p; loadImagePage(); });
+}
+
+function renderImageRows(items) {
+    const tbody = document.getElementById('img-tbody');
+    if (!items.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty-tip">暂无图片，点击右上角「上传图片」试试</td></tr>';
+        return;
+    }
+    tbody.innerHTML = items.map(it => `
+        <tr>
+            <td>${it.id}</td>
+            <td><img class="thumb" src="${escapeHtml(it.url)}" alt=""></td>
+            <td>${escapeHtml(it.title)}</td>
+            <td><span class="tag">${escapeHtml(it.category_name || '-')}</span></td>
+            <td>${fmtSize(it.file_size)}</td>
+            <td>${fmtTime(it.created_at)}</td>
+            <td>
+                <button class="btn-sm" onclick="showImageDetail(${it.id})">详情</button>
+                <button class="btn-sm" onclick="openImageEdit(${it.id})">编辑</button>
+                <button class="btn-sm danger" onclick="deleteImage(${it.id})">删除</button>
+            </td>
+        </tr>`).join('');
+}
+
+function renderPagination(elId, total, page, size, onGo) {
+    const pages = Math.max(1, Math.ceil(total / size));
+    const el = document.getElementById(elId);
+    el.innerHTML = `
+        <span style="color:#888;font-size:13px">共 ${total} 条 / ${pages} 页</span>
+        <button ${page<=1?'disabled':''} data-go="${page-1}">上一页</button>
+        <span style="color:#03e9f4;font-size:13px">第 ${page} 页</span>
+        <button ${page>=pages?'disabled':''} data-go="${page+1}">下一页</button>`;
+    el.querySelectorAll('button[data-go]').forEach(b =>
+        b.addEventListener('click', () => onGo(parseInt(b.dataset.go))));
+}
+
+/* 上传 / 批量上传 */
+async function openUploadModal(batch) {
+    if (!categoryCache.length) await loadCategories();
+    if (!categoryCache.length) {
+        toast('请先创建至少一个分类', 'error');
+        return;
+    }
+    showModal(`
+        <div class="modal-header">${batch ? '批量上传图片' : '上传图片'}<span class="close" onclick="closeModal()">×</span></div>
+        <div class="modal-body">
+            <div class="form-item">
+                <label>选择分类 *</label>
+                <select id="up-category">${categoryOptions()}</select>
+            </div>
+            ${batch ? '' : `
+            <div class="form-item">
+                <label>图片标题（不填则使用原文件名）</label>
+                <input type="text" id="up-title" placeholder="可选">
+            </div>`}
+            <div class="form-item">
+                <label>${batch ? '选择多张图片 *（可一次选多张）' : '选择图片 *'}</label>
+                <input type="file" id="up-files" accept="image/*" ${batch ? 'multiple' : ''}>
+                <div class="file-pick-list" id="up-preview"></div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-sm gray" onclick="closeModal()">取消</button>
+            <button class="btn-primary" id="up-submit" onclick="submitUpload(${batch})">开始上传</button>
+        </div>`);
+    document.getElementById('up-files').addEventListener('change', e => {
+        const box = document.getElementById('up-preview');
+        box.innerHTML = Array.from(e.target.files).map(f => `
+            <div class="file-pick-item">
+                <img src="${URL.createObjectURL(f)}"><span class="fname">${escapeHtml(f.name)}</span>
+                <span>${fmtSize(f.size)}</span>
+            </div>`).join('');
+    });
+}
+
+// 浏览器端图片压缩：等比缩放到 1920px 宽以内，转 JPEG（quality=0.8）。
+// 动图/透明图（gif/png/webp）原样返回，避免丢帧或丢透明通道。
+// 这样上传体积和服务器 CPU 一起降下来（对应“减小服务器压力”诉求）。
+async function compressImageFile(file, maxWidth = 1920, quality = 0.8) {
+  if (!file || !file.type || !file.type.startsWith('image/')) return file;
+  const t = file.type.toLowerCase();
+  if (t === 'image/gif' || t === 'image/png' || t === 'image/webp') return file;
+  return new Promise((resolve) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxWidth) {
+        const r = maxWidth / width;
+        width = maxWidth; height = Math.round(height * r);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      canvas.getContext('2d').drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      canvas.toBlob((blob) => {
+        if (!blob) return resolve(file);
+        const name = (file.name || 'image').replace(/\.[^.]+$/, '') + '.jpg';
+        resolve(new File([blob], name, { type: 'image/jpeg' }));
+      }, 'image/jpeg', quality);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); resolve(file); };
+    img.src = url;
+  });
+}
+
+async function submitUpload(batch) {
+    const category_name = document.getElementById('up-category').value;
+    const files = document.getElementById('up-files').files;
+    if (!files.length) { toast('请选择图片文件', 'error'); return; }
+    const btn = document.getElementById('up-submit');
+    btn.disabled = true; btn.textContent = '压缩并上传中...';
+    try {
+        // 浏览器端先压缩，减小上传体积与服务器压力（png/gif/webp 自动跳过以保留透明/动图）
+        const compressed = [];
+        for (const f of Array.from(files)) compressed.push(await compressImageFile(f));
+        if (batch) {
+            const fd = new FormData();
+            fd.append('category_name', category_name);
+            compressed.forEach(f => fd.append('files', f));
+            const res = await api('/api/image/batch-upload', { method: 'POST', formData: fd });
+            closeModal();
+            toast(res.message);
+            if (res.data.failed_count) {
+                const detail = res.data.failed.map(x => `${x.filename}：${x.reason}`).join('\n');
+                setTimeout(() => alert('以下图片上传失败：\n' + detail), 300);
+            }
+        } else {
+            const title = document.getElementById('up-title').value.trim();
+            const fd = new FormData();
+            fd.append('category_name', category_name);
+            fd.append('file', compressed[0]);
+            if (title) fd.append('title', title);
+            await api('/api/image/upload', { method: 'POST', formData: fd });
+            closeModal();
+            toast('上传成功');
+        }
+        await loadCategories();
+        loadImagePage();
+    } catch (err) {
+        toast(err.message, 'error');
+        btn.disabled = false; btn.textContent = '开始上传';
+    }
+}
+
+/* 详情 */
+async function showImageDetail(id) {
+    try {
+        const res = await api('/api/image/' + id);
+        const d = res.data;
+        showModal(`
+            <div class="modal-header">图片详情 #${d.id}<span class="close" onclick="closeModal()">×</span></div>
+            <div class="modal-body">
+                <div class="detail-grid">
+                    <img class="big-img" src="${escapeHtml(d.url)}">
+                    <div class="dl">
+                        <div><b>标题：</b>${escapeHtml(d.title)}</div>
+                        <div><b>所属分类：</b><span class="tag">${escapeHtml(d.category_name || '-')}</span></div>
+                        <div><b>文件大小：</b>${fmtSize(d.file_size)}</div>
+                        <div><b>上传时间：</b>${fmtTime(d.created_at)}</div>
+                        <div><b>更新时间：</b>${fmtTime(d.updated_at)}</div>
+                        <div><b>分类封面：</b></div>
+                        ${d.category_cover
+                            ? `<img src="${escapeHtml(d.category_cover)}" style="max-width:180px;border-radius:6px;margin-top:4px">`
+                            : '<div style="color:#666;font-size:13px">该分类暂未设置封面</div>'}
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer"><button class="btn-primary" onclick="closeModal()">关闭</button></div>`, true);
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+/* 编辑图片 */
+async function openImageEdit(id) {
+    if (!categoryCache.length) await loadCategories();
+    try {
+        const res = await api('/api/image/' + id);
+        const d = res.data;
+        showModal(`
+            <div class="modal-header">编辑图片 #${d.id}<span class="close" onclick="closeModal()">×</span></div>
+            <div class="modal-body">
+                <img src="${escapeHtml(d.url)}" style="width:100%;max-height:200px;object-fit:cover;border-radius:8px;margin-bottom:16px">
+                <div class="form-item">
+                    <label>图片标题</label>
+                    <input type="text" id="ed-title" value="${escapeHtml(d.title)}">
+                </div>
+                <div class="form-item">
+                    <label>所属分类</label>
+                    <select id="ed-category">${categoryOptions(d.category_id)}</select>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-sm gray" onclick="closeModal()">取消</button>
+                <button class="btn-primary" onclick="submitImageEdit(${d.id})">保存</button>
+            </div>`);
+    } catch (err) { toast(err.message, 'error'); }
+}
+async function submitImageEdit(id) {
+    const title = document.getElementById('ed-title').value.trim();
+    const category_name = document.getElementById('ed-category').value;
+    if (!title) { toast('标题不能为空', 'error'); return; }
+    try {
+        await api('/api/image/update/' + id, { method: 'PUT', json: { title, category_name } });
+        closeModal(); toast('编辑成功');
+        await loadCategories();
+        loadImagePage();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+/* 删除图片 */
+async function deleteImage(id) {
+    const ok = await confirmBox(`确定删除图片 #${id} 吗？删除后文件不可恢复。`);
+    if (!ok) return;
+    try {
+        await api('/api/image/' + id, { method: 'DELETE' });
+        toast('删除成功');
+        await loadCategories();
+        loadImagePage();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+/* ================= 模块二：分类管理 ================= */
+async function renderCategories() {
+    const c = document.getElementById('content');
+    c.innerHTML = `
+        <div class="toolbar">
+            <div class="spacer"></div>
+            <button class="btn-primary" onclick="openCategoryModal()">＋ 新增分类</button>
+        </div>
+        <div id="cat-grid" class="card-grid"><div class="empty-tip">加载中...</div></div>`;
+    await loadCategories();
+    const grid = document.getElementById('cat-grid');
+    if (!categoryCache.length) {
+        grid.innerHTML = '<div class="empty-tip">暂无分类，点击右上角「新增分类」创建</div>';
+        return;
+    }
+    grid.innerHTML = categoryCache.map(c => `
+        <div class="cat-card">
+            ${c.cover_url
+                ? `<img class="cover" src="${escapeHtml(c.cover_url)}" title="${escapeHtml(c.name)}封面">`
+                : '<div class="cover-placeholder">暂无封面</div>'}
+            <div class="info">
+                <div class="name">${escapeHtml(c.name)}</div>
+                <div class="meta">排序：${c.sort_order} ｜ 图片：${c.image_count} 张</div>
+                <div class="actions">
+                    <button class="btn-sm" onclick="openCategoryModalById(${c.id})">编辑</button>
+                    <button class="btn-sm danger" onclick="deleteCategory(${c.id})">删除</button>
+                </div>
+            </div>
+        </div>`).join('');
+}
+
+function openCategoryModalById(id) {
+    const cat = categoryCache.find(x => x.id === id);
+    if (cat) openCategoryModal(cat);
+}
+
+async function openCategoryModal(cat) {
+    const isEdit = !!cat;
+    showModal(`
+        <div class="modal-header">${isEdit ? '编辑分类' : '新增分类'}<span class="close" onclick="closeModal()">×</span></div>
+        <div class="modal-body">
+            <div class="form-item">
+                <label>分类名称 *</label>
+                <input type="text" id="cat-name" maxlength="50" value="${isEdit ? escapeHtml(cat.name) : ''}">
+            </div>
+            <div class="form-item">
+                <label>排序（数字越小越靠前）</label>
+                <input type="number" id="cat-sort" min="0" value="${isEdit ? cat.sort_order : 0}">
+            </div>
+            <div class="form-item">
+                <label>分类封面图片 URL</label>
+                <div class="upload-row">
+                    <input type="text" id="cat-cover" placeholder="可粘贴图片链接，或点击右侧上传"
+                        value="${isEdit ? escapeHtml(cat.cover_url || '') : ''}">
+                    <button type="button" class="btn-sm" onclick="uploadCover()">上传封面</button>
+                    <input type="file" id="cat-cover-file" accept="image/*" class="hidden"
+                        onchange="uploadCoverFile(this)">
+                </div>
+                <img id="cat-cover-preview" class="cover-preview hidden" alt="封面预览">
+                <div class="hint" id="cat-cover-hint">支持 jpg/png/gif/webp，最大 10MB</div>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-sm gray" onclick="closeModal()">取消</button>
+            <button class="btn-primary" onclick="submitCategory(${isEdit ? cat.id : 'null'})">
+                ${isEdit ? '保存修改' : '创建分类'}
+            </button>
+        </div>`);
+    // 编辑时展示已有封面
+    const coverInput = document.getElementById('cat-cover');
+    const preview = document.getElementById('cat-cover-preview');
+    if (isEdit && cat.cover_url) { preview.src = cat.cover_url; preview.classList.remove('hidden'); }
+    coverInput.addEventListener('input', () => {
+        if (coverInput.value) { preview.src = coverInput.value; preview.classList.remove('hidden'); }
+        else preview.classList.add('hidden');
+    });
+}
+function uploadCover() { document.getElementById('cat-cover-file').click(); }
+async function uploadCoverFile(input) {
+    if (!input.files.length) return;
+    const hint = document.getElementById('cat-cover-hint');
+    hint.textContent = '压缩并上传中...';
+    try {
+        const file = await compressImageFile(input.files[0]);
+        const fd = new FormData();
+        fd.append('file', file);
+        const res = await api('/api/admin/upload-file', { method: 'POST', formData: fd });
+        document.getElementById('cat-cover').value = res.data.url;
+        const preview = document.getElementById('cat-cover-preview');
+        preview.src = res.data.url;
+        preview.classList.remove('hidden');
+        hint.textContent = '上传成功';
+    } catch (err) {
+        hint.textContent = '上传失败：' + err.message;
+    }
+}
+async function submitCategory(id) {
+    const name = document.getElementById('cat-name').value.trim();
+    const sort_order = parseInt(document.getElementById('cat-sort').value) || 0;
+    const cover_url = document.getElementById('cat-cover').value.trim();
+    if (!name) { toast('分类名称不能为空', 'error'); return; }
+    const body = { name, sort_order, cover_url };
+    try {
+        if (id) await api('/api/category/update/' + id, { method: 'PUT', json: body });
+        else await api('/api/category/add', { method: 'POST', json: body });
+        closeModal();
+        toast(id ? '编辑成功' : '新增成功');
+        renderCategories();
+    } catch (err) { toast(err.message, 'error'); }
+}
+async function deleteCategory(id) {
+    const cat = categoryCache.find(x => x.id === id);
+    const name = cat ? cat.name : id;
+    const ok = await confirmBox(`确定删除分类「${name}」吗？若分类下仍有图片将无法删除。`);
+    if (!ok) return;
+    try {
+        await api('/api/category/delete/' + id, { method: 'DELETE' });
+        toast('删除成功');
+        renderCategories();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+/* ================= 模块三：管理员管理 ================= */
+async function renderAdmins() {
+    const c = document.getElementById('content');
+    c.innerHTML = `
+        <div class="toolbar">
+            <div class="spacer"></div>
+            <button class="btn-primary" onclick="openAddAdminModal()">＋ 新增管理员</button>
+            <button class="btn-primary" onclick="openPwdModal()">修改我的密码</button>
+        </div>
+        <table>
+            <thead><tr><th>ID</th><th>管理员账号</th><th>创建时间</th><th style="width:160px">操作</th></tr></thead>
+            <tbody id="admin-tbody"><tr><td colspan="4" class="empty-tip">加载中...</td></tr></tbody>
+        </table>`;
+    try {
+        const res = await api('/api/admin/list');
+        const tbody = document.getElementById('admin-tbody');
+        if (!res.data.length) { tbody.innerHTML = '<tr><td colspan="4" class="empty-tip">暂无数据</td></tr>'; return; }
+        tbody.innerHTML = res.data.map(a => `
+            <tr>
+                <td>${a.id}</td>
+                <td>${escapeHtml(a.username)} ${a.username===currentUser?'<span class="tag" style="margin-left:8px">当前账号</span>':''}</td>
+                <td>${fmtTime(a.created_at)}</td>
+                <td>
+                    ${a.username===currentUser
+                        ? '<button class="btn-sm gray" disabled>不可删除</button>'
+                        : `<button class="btn-sm danger" onclick="deleteAdmin(${a.id})">删除</button>`}
+                </td>
+            </tr>`).join('');
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+function openAddAdminModal() {
+    showModal(`
+        <div class="modal-header">新增管理员<span class="close" onclick="closeModal()">×</span></div>
+        <div class="modal-body">
+            <div class="form-item">
+                <label>管理员账号 *（至少2位）</label>
+                <input type="text" id="new-admin-name">
+            </div>
+            <div class="form-item">
+                <label>密码 *（至少6位）</label>
+                <input type="password" id="new-admin-pwd">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-sm gray" onclick="closeModal()">取消</button>
+            <button class="btn-primary" onclick="submitAddAdmin()">创建</button>
+        </div>`);
+}
+async function submitAddAdmin() {
+    const username = document.getElementById('new-admin-name').value.trim();
+    const password = document.getElementById('new-admin-pwd').value;
+    if (username.length < 2) { toast('账号至少2位', 'error'); return; }
+    if (password.length < 6) { toast('密码至少6位', 'error'); return; }
+    try {
+        await api('/api/admin/add', { method: 'POST', json: { username, password } });
+        closeModal(); toast('新增管理员成功');
+        renderAdmins();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+function openPwdModal() {
+    showModal(`
+        <div class="modal-header">修改密码<span class="close" onclick="closeModal()">×</span></div>
+        <div class="modal-body">
+            <div class="form-item">
+                <label>原密码 *</label>
+                <input type="password" id="pwd-old">
+            </div>
+            <div class="form-item">
+                <label>新密码 *（至少6位，不能与原密码相同）</label>
+                <input type="password" id="pwd-new">
+            </div>
+            <div class="form-item">
+                <label>确认新密码 *</label>
+                <input type="password" id="pwd-confirm">
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-sm gray" onclick="closeModal()">取消</button>
+            <button class="btn-primary" onclick="submitPwd()">确认修改</button>
+        </div>`);
+}
+async function submitPwd() {
+    const old_password = document.getElementById('pwd-old').value;
+    const new_password = document.getElementById('pwd-new').value;
+    const confirm = document.getElementById('pwd-confirm').value;
+    if (!old_password) { toast('请输入原密码', 'error'); return; }
+    if (new_password.length < 6) { toast('新密码至少6位', 'error'); return; }
+    if (new_password !== confirm) { toast('两次输入的新密码不一致', 'error'); return; }
+    try {
+        await api('/api/admin/password', { method: 'PUT', json: { old_password, new_password } });
+        closeModal(); toast('密码修改成功');
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function deleteAdmin(id) {
+    const ok = await confirmBox(`确定删除管理员 #${id} 吗？`);
+    if (!ok) return;
+    try {
+        await api('/api/admin/' + id, { method: 'DELETE' });
+        toast('删除成功');
+        renderAdmins();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+/* ================= 模块四：轮播海报管理 ================= */
+function linkTypeText(t) {
+    return ({ none: '仅展示不跳转', miniprogram: '跳转别的小程序', category: '跳转分类', contact: '联系客服' })[t] || t;
+}
+
+async function renderBanners() {
+    const c = document.getElementById('content');
+    c.innerHTML = `
+        <div class="toolbar">
+            <div class="spacer"></div>
+            <button class="btn-primary" onclick="openBannerModal()">＋ 新增海报</button>
+        </div>
+        <table>
+            <thead><tr>
+                <th>预览</th><th>标题</th><th>跳转类型</th><th>排序</th><th>状态</th>
+                <th style="width:160px">操作</th>
+            </tr></thead>
+            <tbody id="bn-tbody"><tr><td colspan="6" class="empty-tip">加载中...</td></tr></tbody>
+        </table>`;
+    try {
+        const res = await api('/api/banner/admin/list');
+        const list = res.data || [];
+        const tbody = document.getElementById('bn-tbody');
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-tip">暂无海报，点击右上角「新增海报」创建</td></tr>';
+            return;
+        }
+        tbody.innerHTML = list.map(b => `
+            <tr>
+                <td>${b.image_url ? `<img class="cover-thumb" src="${escapeHtml(b.image_url)}" alt="">` : '<div class="cover-empty">无图</div>'}</td>
+                <td>${escapeHtml(b.title || '—')}</td>
+                <td><span class="tag">${linkTypeText(b.link_type)}</span></td>
+                <td>${b.sort_order}</td>
+                <td>${b.status === 1 ? '<span class="tag">启用</span>' : '<span style="color:#ff6b6b">停用</span>'}</td>
+                <td>
+                    <button class="btn-sm" onclick="editBanner(${b.id})">编辑</button>
+                    <button class="btn-sm danger" onclick="deleteBanner(${b.id})">删除</button>
+                </td>
+            </tr>`).join('');
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function openBannerModal(b) {
+    const isEdit = !!b;
+    const banner = b || {};
+    if (!categoryCache.length) await loadCategories();
+    const catOptions = categoryCache.map(c =>
+        `<option value="${c.id}" ${(isEdit && banner.link_category_id === c.id) ? 'selected' : ''}>${escapeHtml(c.name)}</option>`).join('');
+    showModal(`
+        <div class="modal-header">${isEdit ? '编辑海报 #' + banner.id : '新增海报'}<span class="close" onclick="closeModal()">×</span></div>
+        <div class="modal-body">
+            <div class="form-item">
+                <label>海报标题（备注，可不填）</label>
+                <input type="text" id="bn-title" maxlength="100" value="${isEdit ? escapeHtml(banner.title) : ''}">
+            </div>
+            <div class="form-item">
+                <label>海报图片 *</label>
+                <div class="upload-row">
+                    <input type="text" id="bn-image" placeholder="粘贴图片链接，或点右侧上传" value="${isEdit ? escapeHtml(banner.image_url) : ''}">
+                    <button type="button" class="btn-sm" onclick="uploadBannerImage()">上传图片</button>
+                    <input type="file" id="bn-image-file" accept="image/*" class="hidden" onchange="uploadBannerImageFile(this)">
+                </div>
+                <img id="bn-image-preview" class="cover-preview ${isEdit && banner.image_url ? '' : 'hidden'}" src="${isEdit ? escapeHtml(banner.image_url) : ''}" alt="预览">
+            </div>
+            <div class="form-item">
+                <label>跳转类型</label>
+                <select id="bn-link-type" onchange="toggleBannerLinkFields()">
+                    <option value="none" ${isEdit && banner.link_type === 'none' ? 'selected' : ''}>仅展示不跳转</option>
+                    <option value="miniprogram" ${isEdit && banner.link_type === 'miniprogram' ? 'selected' : ''}>跳转别的小程序</option>
+                    <option value="category" ${isEdit && banner.link_type === 'category' ? 'selected' : ''}>跳转分类</option>
+                    <option value="contact" ${isEdit && banner.link_type === 'contact' ? 'selected' : ''}>联系客服（微信原生客服）</option>
+                </select>
+            </div>
+            <div class="form-item" id="bn-mp-fields" style="display:${isEdit && banner.link_type === 'miniprogram' ? 'block' : 'none'}">
+                <label>目标小程序 AppID *</label>
+                <input type="text" id="bn-appid" placeholder="如 wx1234567890abcdef" value="${isEdit ? escapeHtml(banner.link_appid) : ''}">
+                <label>目标小程序页面路径</label>
+                <input type="text" id="bn-path" placeholder="如 pages/index/index" value="${isEdit ? escapeHtml(banner.link_path) : ''}">
+                <div class="hint">真机跳转需在小程序后台「关联小程序」中加入该 AppID</div>
+            </div>
+            <div class="form-item" id="bn-cat-fields" style="display:${isEdit && banner.link_type === 'category' ? 'block' : 'none'}">
+                <label>跳转到的分类 *</label>
+                <select id="bn-category">${catOptions}</select>
+            </div>
+            <div class="form-item">
+                <label>排序（数字越小越靠前）</label>
+                <input type="number" id="bn-sort" min="0" value="${isEdit ? banner.sort_order : 0}">
+            </div>
+            <div class="form-item">
+                <label>状态</label>
+                <select id="bn-status">
+                    <option value="1" ${isEdit && banner.status === 1 ? 'selected' : ''}>启用</option>
+                    <option value="0" ${isEdit && banner.status === 0 ? 'selected' : ''}>停用</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-sm gray" onclick="closeModal()">取消</button>
+            <button class="btn-primary" onclick="submitBanner(${isEdit ? banner.id : null})">保存</button>
+        </div>`);
+    toggleBannerLinkFields();
+    const imgInput = document.getElementById('bn-image');
+    const imgPreview = document.getElementById('bn-image-preview');
+    imgInput.addEventListener('input', () => {
+        if (imgInput.value) { imgPreview.src = imgInput.value; imgPreview.classList.remove('hidden'); }
+        else imgPreview.classList.add('hidden');
+    });
+}
+
+function toggleBannerLinkFields() {
+    const t = document.getElementById('bn-link-type').value;
+    document.getElementById('bn-mp-fields').style.display = (t === 'miniprogram') ? 'block' : 'none';
+    document.getElementById('bn-cat-fields').style.display = (t === 'category') ? 'block' : 'none';
+}
+
+function uploadBannerImage() { document.getElementById('bn-image-file').click(); }
+async function uploadBannerImageFile(input) {
+    if (!input.files.length) return;
+    try {
+        const file = await compressImageFile(input.files[0]);
+        const fd = new FormData();
+        fd.append('file', file);
+        const res = await api('/api/banner/upload', { method: 'POST', formData: fd });
+        document.getElementById('bn-image').value = res.data.url;
+        const preview = document.getElementById('bn-image-preview');
+        preview.src = res.data.url;
+        preview.classList.remove('hidden');
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function submitBanner(id) {
+    const link_type = document.getElementById('bn-link-type').value;
+    const image_url = document.getElementById('bn-image').value.trim();
+    if (!image_url) { toast('请上传或粘贴海报图片', 'error'); return; }
+    const body = {
+        title: document.getElementById('bn-title').value.trim(),
+        image_url,
+        link_type,
+        sort_order: parseInt(document.getElementById('bn-sort').value) || 0,
+        status: parseInt(document.getElementById('bn-status').value),
+    };
+    if (link_type === 'miniprogram') {
+        const appid = document.getElementById('bn-appid').value.trim();
+        if (!appid) { toast('跳转小程序需填写 AppID', 'error'); return; }
+        body.link_appid = appid;
+        body.link_path = document.getElementById('bn-path').value.trim();
+    } else if (link_type === 'category') {
+        const cid = parseInt(document.getElementById('bn-category').value);
+        if (!cid) { toast('请选择跳转的分类', 'error'); return; }
+        body.link_category_id = cid;
+    }
+    try {
+        if (id) await api('/api/banner/update/' + id, { method: 'PUT', json: body });
+        else await api('/api/banner/add', { method: 'POST', json: body });
+        closeModal();
+        toast(id ? '编辑成功' : '新增成功');
+        renderBanners();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function editBanner(id) {
+    try {
+        const res = await api('/api/banner/admin/list');
+        const b = (res.data || []).find(x => x.id === id);
+        if (!b) { toast('未找到该海报', 'error'); return; }
+        openBannerModal(b);
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function deleteBanner(id) {
+    const ok = await confirmBox(`确定删除海报 #${id} 吗？删除后首页将不再展示。`);
+    if (!ok) return;
+    try {
+        await api('/api/banner/' + id, { method: 'DELETE' });
+        toast('删除成功');
+        renderBanners();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+/* ================= 模块五：公告管理 ================= */
+async function renderNotices() {
+    const c = document.getElementById('content');
+    c.innerHTML = `
+        <div class="toolbar">
+            <div class="spacer"></div>
+            <button class="btn-primary" onclick="openNoticeModal()">＋ 新增公告</button>
+        </div>
+        <table>
+            <thead><tr>
+                <th>ID</th><th>标题</th><th>正文摘要</th><th>排序</th><th>状态</th>
+                <th style="width:160px">操作</th>
+            </tr></thead>
+            <tbody id="nt-tbody"><tr><td colspan="6" class="empty-tip">加载中...</td></tr></tbody>
+        </table>`;
+    try {
+        const res = await api('/api/notice/admin/list');
+        const list = res.data || [];
+        const tbody = document.getElementById('nt-tbody');
+        if (!list.length) {
+            tbody.innerHTML = '<tr><td colspan="6" class="empty-tip">暂无公告，点击右上角「新增公告」创建</td></tr>';
+            return;
+        }
+        tbody.innerHTML = list.map(n => `
+            <tr>
+                <td>${n.id}</td>
+                <td>${escapeHtml(n.title || '—')}</td>
+                <td style="max-width:360px;color:#aaa">${escapeHtml(truncateText(n.content, 36))}</td>
+                <td>${n.sort_order}</td>
+                <td>${n.status === 1 ? '<span class="tag">启用</span>' : '<span style="color:#ff6b6b">停用</span>'}</td>
+                <td>
+                    <button class="btn-sm" onclick="editNotice(${n.id})">编辑</button>
+                    <button class="btn-sm danger" onclick="deleteNotice(${n.id})">删除</button>
+                </td>
+            </tr>`).join('');
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+function truncateText(s, len) {
+    s = String(s || '');
+    return s.length > len ? s.slice(0, len) + '…' : s;
+}
+
+async function openNoticeModal(n) {
+    const isEdit = !!n;
+    const notice = n || {};
+    showModal(`
+        <div class="modal-header">${isEdit ? '编辑公告 #' + notice.id : '新增公告'}<span class="close" onclick="closeModal()">×</span></div>
+        <div class="modal-body">
+            <div class="form-item">
+                <label>公告标题 *</label>
+                <input type="text" id="nt-title" maxlength="200" value="${isEdit ? escapeHtml(notice.title) : ''}">
+            </div>
+            <div class="form-item">
+                <label>公告正文</label>
+                <textarea id="nt-content" rows="8" placeholder="支持纯文本，回车分段">${isEdit ? escapeHtml(notice.content) : ''}</textarea>
+            </div>
+            <div class="form-item">
+                <label>排序（数字越小越靠前）</label>
+                <input type="number" id="nt-sort" min="0" value="${isEdit ? notice.sort_order : 0}">
+            </div>
+            <div class="form-item">
+                <label>状态</label>
+                <select id="nt-status">
+                    <option value="1" ${isEdit && notice.status === 1 ? 'selected' : ''}>启用</option>
+                    <option value="0" ${isEdit && notice.status === 0 ? 'selected' : ''}>停用</option>
+                </select>
+            </div>
+        </div>
+        <div class="modal-footer">
+            <button class="btn-sm gray" onclick="closeModal()">取消</button>
+            <button class="btn-primary" onclick="submitNotice(${isEdit ? notice.id : 'null'})">保存</button>
+        </div>`);
+}
+
+async function submitNotice(id) {
+    const title = document.getElementById('nt-title').value.trim();
+    if (!title) { toast('公告标题不能为空', 'error'); return; }
+    const body = {
+        title,
+        content: document.getElementById('nt-content').value,
+        sort_order: parseInt(document.getElementById('nt-sort').value) || 0,
+        status: parseInt(document.getElementById('nt-status').value)
+    };
+    try {
+        if (id) await api('/api/notice/update/' + id, { method: 'PUT', json: body });
+        else await api('/api/notice/add', { method: 'POST', json: body });
+        closeModal();
+        toast(id ? '编辑成功' : '新增成功');
+        renderNotices();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function editNotice(id) {
+    try {
+        const res = await api('/api/notice/admin/list');
+        const n = (res.data || []).find(x => x.id === id);
+        if (!n) { toast('未找到该公告', 'error'); return; }
+        openNoticeModal(n);
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+async function deleteNotice(id) {
+    const ok = await confirmBox(`确定删除公告 #${id} 吗？删除后小程序端将不再展示。`);
+    if (!ok) return;
+    try {
+        await api('/api/notice/' + id, { method: 'DELETE' });
+        toast('删除成功');
+        renderNotices();
+    } catch (err) { toast(err.message, 'error'); }
+}
+
+/* ================= 启动 ================= */
+if (token) enterApp();
+</script>
+</body>
+</html>

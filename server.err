@@ -1,0 +1,7 @@
+INFO:     Will watch for changes in these directories: ['D:\\学习资料\\python学习\\b站\\Fastapi\\1_自用图库小程序\\1_自用图库fastapi']
+INFO:     Uvicorn running on http://127.0.0.1:8000 (Press CTRL+C to quit)
+INFO:     Started reloader process [19552] using StatReload
+INFO:     Started server process [632]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+WARNING:  StatReload detected changes in 'main.py'. Reloading...
