@@ -1,3 +1,5 @@
+import os
+
 from fastapi import HTTPException, status
 from sqlalchemy import select, func
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -6,22 +8,27 @@ from models.admin import Admin
 from schemas.admin import AdminCreate, PasswordChange
 from utils.admin_auth import hash_password, verify_password
 
-# 系统初始管理员：表中不存在 admin 账号时自动创建
-DEFAULT_ADMIN_USERNAME = "admin"
-DEFAULT_ADMIN_PASSWORD = "admin123"
+def _default_admin_credentials() -> tuple[str, str]:
+    """初始管理员账号密码：优先读环境变量，没配才用默认值。
+    上线前建议用 ADMIN_USERNAME / ADMIN_PASSWORD 改成自己的账号密码。"""
+    username = os.getenv("ADMIN_USERNAME", "admin").strip() or "admin"
+    password = os.getenv("ADMIN_PASSWORD", "admin123")
+    return username, password
 
 
-# 启动时调用：确保默认管理员 admin/admin123 存在
-async def ensure_default_admin(db: AsyncSession):
+# 启动时调用：数据库里已有该账号 → 跳过；不存在 → 创建
+# 只做初始化，不会重复创建，也不会重置已有账号的密码
+async def ensure_default_admin(db: AsyncSession) -> dict:
+    username, password = _default_admin_credentials()
     exists = (
-        await db.execute(select(Admin).where(Admin.username == DEFAULT_ADMIN_USERNAME))
+        await db.execute(select(Admin).where(Admin.username == username))
     ).scalar_one_or_none()
-    if exists is None:
-        db.add(Admin(
-            username=DEFAULT_ADMIN_USERNAME,
-            password=hash_password(DEFAULT_ADMIN_PASSWORD),
-        ))
-        await db.commit()
+    if exists is not None:
+        return {"created": False, "username": username}
+
+    db.add(Admin(username=username, password=hash_password(password)))
+    await db.commit()
+    return {"created": True, "username": username}
 
 
 # 登录校验，成功返回管理员对象

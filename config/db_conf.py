@@ -6,7 +6,7 @@ from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, Asyn
 # PythonAnywhere 免费版用 SQLite，生产/本地用 MySQL
 ASYNC_DATABASE_URL = os.getenv(
     "DATABASE_URL",
-    "sqlite+aiosqlite:///./mysite.db",
+     "mysql+aiomysql://root:123456@localhost:3306/my_image_list?charset=utf8",
 )
 
 # 根据数据库类型选择连接池参数

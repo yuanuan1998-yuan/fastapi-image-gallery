@@ -71,7 +71,12 @@ async def lifespan(app: FastAPI):
         await conn.run_sync(_migrate_columns)
     # 3. 确保默认管理员 admin/admin123 与示例数据（轮播海报、公告）存在
     async with AsyncSessionLocal() as session:
-        await ensure_default_admin(session)
+        info = await ensure_default_admin(session)
+        # 启动日志：明确打印是「新建」还是「已存在跳过」，避免不知道初始账号从哪来
+        if info["created"]:
+            print(f"[启动] 已初始化管理员账号：{info['username']}（登录后请立即修改密码）")
+        else:
+            print(f"[启动] 管理员 {info['username']} 已存在，跳过初始化")
         from crud.banner import ensure_default_banners
         await ensure_default_banners(session)
         from crud.notice import ensure_default_notices
@@ -118,4 +123,4 @@ async def admin_page():
     return FileResponse(os.path.join(PAGE_DIR, "admin.html"))
 
 if __name__ == '__main__':
-    uvicorn.run(app="main:app", host="127.0.0.1", port=8001, reload=True)
+    uvicorn.run(app="main:app", host="127.0.0.1", port=8000, reload=True)

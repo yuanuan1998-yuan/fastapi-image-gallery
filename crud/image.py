@@ -283,21 +283,25 @@ async def delete_image(db: AsyncSession, image_id: int):
         "updated_at": image.updated_at,
     }
 
-    await db.execute(delete(Image).where(Image.id == image_id))
-    await db.commit()
-
-    # 最佳努力删除实际文件（数据库记录已删即视为成功，文件残留不影响接口结果）
+    # 先删实际文件（OSS 或本地），再删数据库记录
+    # 这样即使文件删除失败，数据库记录还在，可以重试
     if OSS_ENABLED and image.url.startswith(OSS_KEY_PREFIX):
         try:
             await delete_object(image.url)
-        except Exception:
-            pass
+        except Exception as e:
+            # 文件删除失败不阻塞数据库删除，但记录日志
+            import logging
+            logging.warning(f"删除 S3 文件失败: key={image.url}, error={e}")
     else:
         file_path = os.path.join(UPLOAD_DIR, os.path.basename(image.url))
         if os.path.exists(file_path):
             try:
                 os.remove(file_path)
-            except OSError:
-                pass
+            except OSError as e:
+                import logging
+                logging.warning(f"删除本地文件失败: path={file_path}, error={e}")
+
+    await db.execute(delete(Image).where(Image.id == image_id))
+    await db.commit()
 
     return deleted_image
