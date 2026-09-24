@@ -111,6 +111,21 @@ async def search_images(
     return success_response('搜索图片成功', data=result)
 
 
+# 批量删除图片（需登录；同步删除 S3 文件）
+@reouter.post("/batch-delete")
+async def batch_delete_images(
+    image_ids: list[int],
+    db: AsyncSession = Depends(get_db),
+    _admin=Depends(get_current_admin),
+):
+    result = await image_crud.batch_delete_images(db, image_ids)
+    await _invalidate_all_image_caches()
+    return success_response(
+        f"批量删除完成：成功{result['success_count']}张，失败{result['failed_count']}张",
+        data=result,
+    )
+
+
 # 图片详情（公开；附带所属分类名称和分类封面）
 @reouter.get("/{image_id}")
 @cached(ttl=120, prefix="image_detail")  # 单张图片详情缓存 2 分钟

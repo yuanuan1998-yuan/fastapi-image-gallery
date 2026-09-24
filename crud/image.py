@@ -284,15 +284,27 @@ async def delete_image(db: AsyncSession, image_id: int):
     }
 
     # 先删实际文件（OSS 或本地），再删数据库记录
-    # 这样即使文件删除失败，数据库记录还在，可以重试
-    if OSS_ENABLED and image.url.startswith(OSS_KEY_PREFIX):
-        try:
-            await delete_object(image.url)
-        except Exception as e:
-            # 文件删除失败不阻塞数据库删除，但记录日志
-            import logging
-            logging.warning(f"删除 S3 文件失败: key={image.url}, error={e}")
-    else:
+    # 兼容两种格式：相对 key（images/xxx.jpg）或完整公网 URL（https://xxx.s3.bitiful.net/images/xxx.jpg）
+    file_deleted = False
+    if OSS_ENABLED:
+        from config.oss_conf import OSS_BUCKET
+        s3_key = None
+        if image.url.startswith(OSS_KEY_PREFIX):
+            s3_key = image.url
+        elif f"{OSS_BUCKET}.s3.bitiful.net" in image.url:
+            parts = image.url.split(f"{OSS_BUCKET}.s3.bitiful.net/")
+            if len(parts) > 1:
+                s3_key = parts[1].split("?")[0]
+
+        if s3_key:
+            try:
+                await delete_object(s3_key)
+                file_deleted = True
+            except Exception as e:
+                import logging
+                logging.warning(f"删除 S3 文件失败: key={s3_key}, error={e}")
+
+    if not file_deleted:
         file_path = os.path.join(UPLOAD_DIR, os.path.basename(image.url))
         if os.path.exists(file_path):
             try:
@@ -305,3 +317,63 @@ async def delete_image(db: AsyncSession, image_id: int):
     await db.commit()
 
     return deleted_image
+
+
+# 批量删除图片（同步删除 S3 文件）
+async def batch_delete_images(db: AsyncSession, image_ids: list[int]):
+    if not image_ids:
+        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="请选择要删除的图片")
+
+    images = (
+        await db.execute(select(Image).where(Image.id.in_(image_ids)))
+    ).scalars().all()
+
+    if not images:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="图片不存在")
+
+    from config.oss_conf import OSS_BUCKET
+    deleted_ids = []
+    failed = []
+
+    for img in images:
+        try:
+            file_deleted = False
+            if OSS_ENABLED:
+                s3_key = None
+                if img.url.startswith(OSS_KEY_PREFIX):
+                    s3_key = img.url
+                elif f"{OSS_BUCKET}.s3.bitiful.net" in img.url:
+                    parts = img.url.split(f"{OSS_BUCKET}.s3.bitiful.net/")
+                    if len(parts) > 1:
+                        s3_key = parts[1].split("?")[0]
+
+                if s3_key:
+                    try:
+                        await delete_object(s3_key)
+                        file_deleted = True
+                    except Exception as e:
+                        import logging
+                        logging.warning(f"批量删除 S3 失败: key={s3_key}, error={e}")
+
+            if not file_deleted:
+                file_path = os.path.join(UPLOAD_DIR, os.path.basename(img.url))
+                if os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                    except OSError:
+                        pass
+
+            deleted_ids.append(img.id)
+        except Exception as e:
+            failed.append({"id": img.id, "title": img.title, "reason": str(e)})
+
+    if deleted_ids:
+        await db.execute(delete(Image).where(Image.id.in_(deleted_ids)))
+        await db.commit()
+
+    return {
+        "success_count": len(deleted_ids),
+        "failed_count": len(failed),
+        "deleted_ids": deleted_ids,
+        "failed": failed,
+    }
