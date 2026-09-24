@@ -21,15 +21,17 @@ def to_relative(url: str | None) -> str:
 def to_full_url(url: str | None, base_url: str) -> str:
     """把相对路径拼成完整地址；外链和空值原样返回。
 
-    开启 OSS 后：以 OSS_KEY_PREFIX 开头的 key（如 images/xxx.jpg）走对象存储公网域名；
+    开启 OSS 后：以 OSS_KEY_PREFIX 开头的 key（如 images/xxx.jpg）生成预签名 URL；
     其余（/static/... 本地旧文件）仍走本服务域名，保证旧数据可读。
     """
     if not url:
         return ""
     if url.startswith("http://") or url.startswith("https://"):
         return url
-    if OSS_ENABLED and OSS_PUBLIC_BASE and url.startswith(OSS_KEY_PREFIX):
-        return OSS_PUBLIC_BASE.rstrip("/") + "/" + url.lstrip("/")
+    if OSS_ENABLED and url.startswith(OSS_KEY_PREFIX):
+        # 生成预签名 URL（7 天有效期），避免桶私有导致 403
+        from utils.s3 import _generate_presigned_url
+        return _generate_presigned_url(url)
     return base_url.rstrip("/") + url
 
 

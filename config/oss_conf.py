@@ -1,6 +1,6 @@
 """S3 兼容对象存储配置（Bitiful / 阿里云 OSS / 腾讯云 COS 等通用 S3 接口）。
 
-全部通过环境变量配置，绝不把密钥写死在代码里。以下为 Bitiful（anyfast 存储桶）的示例值，
+全部通过环境变量配置，绝不把密钥写死在代码里。以下为 Bitiful（fanxi-images 存储桶）的示例值，
 请在「缤纷云控制台 → S3 兼容接入」页面复制你自己的 Endpoint / AccessKey / 外链域名后回填。
 
 本地开发：把变量写进项目根目录的 .env（已被 .gitignore 忽略，不会提交）。
@@ -34,14 +34,15 @@ OSS_ENDPOINT = os.getenv("OSS_ENDPOINT", "https://s3.bitiful.net").strip()
 OSS_ACCESS_KEY_ID = os.getenv("OSS_ACCESS_KEY_ID", "").strip()
 OSS_SECRET_ACCESS_KEY = os.getenv("OSS_SECRET_ACCESS_KEY", "").strip()
 
-# 存储桶名称
-OSS_BUCKET = os.getenv("OSS_BUCKET", "anyfast").strip()
+# 存储桶名称（真实桶名以控制台为准，如 fanxi-images）
+OSS_BUCKET = os.getenv("OSS_BUCKET", "fanxi-images").strip()
 
 # 区域（部分 S3 兼容服务可不填，留空即可）
 OSS_REGION = os.getenv("OSS_REGION", "cn-east-1").strip() or None
 
-# 公网访问域名：前端 <img src> 实际请求的地址（如 https://anyfast.bitiful.com）
-OSS_PUBLIC_BASE = os.getenv("OSS_PUBLIC_BASE", "https://anyfast.s3.bitiful.net").strip().rstrip("/")
+# 公网访问域名：前端 <img src> 实际请求的地址。
+# ⚠️ 桶必须在控制台开启「公有读」，否则这个地址匿名访问会返回 403
+OSS_PUBLIC_BASE = os.getenv("OSS_PUBLIC_BASE", "https://fanxi-images.s3.bitiful.net").strip().rstrip("/")
 
 # 对象 key 前缀（区分本地旧数据），数据库里 S3 图片的 url 形如 images/<uuid>.jpg
 OSS_KEY_PREFIX = os.getenv("OSS_KEY_PREFIX", "images/").strip()

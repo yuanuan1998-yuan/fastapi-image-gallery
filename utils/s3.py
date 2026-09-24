@@ -75,6 +75,20 @@ async def object_exists(key: str) -> bool:
     return await asyncio.to_thread(_exists, key)
 
 
+def _generate_presigned_url(key: str, expires: int = 604800) -> str:
+    """生成预签名 URL（默认 7 天有效期）。"""
+    return _make_client().generate_presigned_url(
+        "get_object",
+        Params={"Bucket": OSS_BUCKET, "Key": key},
+        ExpiresIn=expires,
+    )
+
+
+async def generate_presigned_url(key: str, expires: int = 604800) -> str:
+    """异步生成预签名 URL（默认 7 天有效期）。"""
+    return await asyncio.to_thread(_generate_presigned_url, key, expires)
+
+
 async def store_image(content: bytes, ext: str, subdir: str = "") -> str:
     """保存一张图片，返回应写入数据库的 URL（OSS 模式下是 object key，本地模式是 /static/...）。
 
