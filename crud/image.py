@@ -72,14 +72,17 @@ async def upload_image(
     if OSS_ENABLED:
         from config.oss_conf import require_oss_conf
         require_oss_conf()
-        key = f"{OSS_KEY_PREFIX}{stored_name}"
+        # 普通图片放到 images/photos/ 子目录，和 banners/covers 分开
+        key = f"{OSS_KEY_PREFIX}photos/{stored_name}"
         await upload_object(key, compressed_bytes, content_type)
         image_url = key
     else:
-        save_path = os.path.join(UPLOAD_DIR, stored_name)
+        photos_dir = os.path.join(UPLOAD_DIR, "photos")
+        os.makedirs(photos_dir, exist_ok=True)
+        save_path = os.path.join(photos_dir, stored_name)
         with open(save_path, "wb") as f:
             f.write(compressed_bytes)
-        image_url = f"{URL_PREFIX}/{stored_name}"
+        image_url = f"{URL_PREFIX}/photos/{stored_name}"
 
     # 6. 写入数据库（url 只存对象 key 或相对路径；完整域名在响应时拼接）
     image_title = title.strip() if title and title.strip() else os.path.splitext(upload_file.filename)[0]
