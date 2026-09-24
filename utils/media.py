@@ -27,6 +27,16 @@ def to_full_url(url: str | None, base_url: str) -> str:
     if not url:
         return ""
     if url.startswith("http://") or url.startswith("https://"):
+        # 兼容旧格式：如果是 Bitiful S3 域名下的图片，重新生成预签名 URL
+        from config.oss_conf import OSS_BUCKET
+        if OSS_ENABLED and f"{OSS_BUCKET}.s3.bitiful.net" in url:
+            # 从完整 URL 中提取 object key
+            # 格式: https://bucket.s3.bitiful.net/images/xxx.jpg
+            parts = url.split(f"{OSS_BUCKET}.s3.bitiful.net/")
+            if len(parts) > 1:
+                key = parts[1].split("?")[0]  # 去掉查询参数
+                from utils.s3 import _generate_presigned_url
+                return _generate_presigned_url(key)
         return url
     if OSS_ENABLED and url.startswith(OSS_KEY_PREFIX):
         # 生成预签名 URL（7 天有效期），避免桶私有导致 403
