@@ -1,9 +1,13 @@
 from sqlalchemy import select, delete
 from sqlalchemy.ext.asyncio import AsyncSession
 from fastapi import HTTPException, status
+import os
+import logging
 
 from models.banner import Banner
 from utils.media import to_relative
+from config.oss_conf import OSS_ENABLED, OSS_KEY_PREFIX
+from utils.s3 import delete_object
 
 
 def _to_dict(b: Banner) -> dict:
@@ -63,6 +67,8 @@ async def update_banner(db: AsyncSession, banner_id: int, data) -> dict:
     if b is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="海报不存在")
 
+    old_image_url = b.image_url
+
     if data.title is not None:
         b.title = data.title
     if data.image_url is not None:
@@ -82,6 +88,24 @@ async def update_banner(db: AsyncSession, banner_id: int, data) -> dict:
 
     await db.commit()
     await db.refresh(b)
+
+    # 如果更换了图片，删除旧图片文件
+    if old_image_url and old_image_url != b.image_url:
+        # 跳过外链图片（http 开头）
+        if not old_image_url.startswith("http"):
+            if OSS_ENABLED and old_image_url.startswith(OSS_KEY_PREFIX):
+                try:
+                    await delete_object(old_image_url)
+                except Exception as e:
+                    logging.warning(f"删除轮播海报旧图 S3 失败: key={old_image_url}, error={e}")
+            else:
+                file_path = os.path.join("uploads", os.path.basename(old_image_url))
+                if os.path.exists(file_path):
+                    try:
+                        os.remove(file_path)
+                    except OSError as e:
+                        logging.warning(f"删除轮播海报旧图本地失败: path={file_path}, error={e}")
+
     return _to_dict(b)
 
 
@@ -90,6 +114,23 @@ async def delete_banner(db: AsyncSession, banner_id: int) -> dict:
     if b is None:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="海报不存在")
     info = _to_dict(b)
+
+    # 先删实际文件，再删数据库记录
+    image_url = b.image_url
+    if image_url and not image_url.startswith("http"):
+        if OSS_ENABLED and image_url.startswith(OSS_KEY_PREFIX):
+            try:
+                await delete_object(image_url)
+            except Exception as e:
+                logging.warning(f"删除轮播海报 S3 失败: key={image_url}, error={e}")
+        else:
+            file_path = os.path.join("uploads", os.path.basename(image_url))
+            if os.path.exists(file_path):
+                try:
+                    os.remove(file_path)
+                except OSError as e:
+                    logging.warning(f"删除轮播海报本地失败: path={file_path}, error={e}")
+
     await db.execute(delete(Banner).where(Banner.id == banner_id))
     await db.commit()
     return info
